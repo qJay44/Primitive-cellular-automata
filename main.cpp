@@ -1,7 +1,9 @@
 #include "SFML/Graphics.hpp"
 #include "SFML/Window.hpp"
 #include "SFML/System.hpp"
+#include <algorithm>
 #include <cmath>
+#include <exception>
 #include <ios>
 #include <iostream>
 #include <bitset>
@@ -17,16 +19,16 @@ std::string decimalToBinary(int num) {
     binary.insert(binary.begin(), 8 - binary.size(), '0');
 
   return binary;
-}
+};
 
 int main() {
   srand((unsigned)time(NULL));
 
   const int width = 1200;
-  const int height = 900;
-  const int squareSize = 10;
-  const int amountX = width / squareSize;
-  const int amountY = height / squareSize;
+  const int height = 800;
+  const int squareSize = 1;
+  const int rows = height / squareSize;
+  const int columns = width / squareSize;
   const int rule = rand() % 255 + 1;
 
   // create the window
@@ -40,46 +42,47 @@ int main() {
   const sf::Texture &canvasTexture = renderTexture.getTexture();
   sf::Sprite canvasSprite(canvasTexture);
 
-  char grid[amountX][amountY] {};
-  grid[amountX / 2][amountY / 2] = '1';
+  char grid[rows][columns] {};
 
-  for (int i = 0; i < amountX; i++) {
-    for (int j = 0; j < amountY; j++) {
-      if (i == 0 && j == 0) continue;
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < columns; j++) {
       grid[i][j] = '0';
     }
   }
 
-  const std::string ruleBinary = decimalToBinary(110);
+  grid[0][columns / 2] = '1';
+
+  const std::string ruleBinary = decimalToBinary(rule);
   std::map<std::string, char> cellRules;
 
   for (int i = 7; i >= 0; i--) {
     cellRules[std::bitset<3>(i).to_string()] = ruleBinary[7 - i];
   }
 
-  for (int i = 0; i < amountX; i++) {
-    for (int j = 0; j < amountY; j++) {
-      std::string mid = std::to_string(grid[i][j]);
-      std::string left;
-      std::string right;
+  for (int i = 0; i < rows - 1; i++) {
+    for (int j = 0; j < columns; j++) {
+      char mid = grid[i][j];
+      char left;
+      char right;
+
       if (j == 0) {
-        std::string left  = std::to_string(grid[i][amountY - 1]);
-        std::string right = std::to_string(grid[i][j + 1]);
+        left = grid[i][columns - 1];
+        right = grid[i][j + 1];
       }
-      else if (j == amountY - 1 && i != amountX - 1) {
-        std::string left  = std::to_string(grid[i][j - 1]);
-        std::string right = std::to_string(grid[i][0]);
+      else if (j == columns - 1 && i != rows - 1) {
+        left = grid[i][j - 1];
+        right = grid[i][0];
       } else {
-        std::string left  = std::to_string(grid[i][j - 1]);
-        std::string right = std::to_string(grid[i][j + 1]);
+        left = grid[i][j - 1];
+        right = grid[i][j + 1];
       }
 
-      std::string currentRule = left + mid + right;
+      std::string currentRule {left, mid, right};
       grid[i + 1][j] = cellRules[currentRule];
 
       sf::RectangleShape rect;
       rect.setSize(sf::Vector2f(squareSize, squareSize));
-      rect.setPosition(i * squareSize, j * squareSize);
+      rect.setPosition(j * squareSize, height - squareSize - i * squareSize);
 
       if (grid[i][j] == '1')
         rect.setFillColor(sf::Color::Black);
@@ -90,8 +93,6 @@ int main() {
     }
   }
 
-  bool doOnce = true;
-
   // run the program as long as the window is open
   while (window.isOpen())
   {
@@ -101,6 +102,8 @@ int main() {
     {
         // "close requested" event: we close the window
         if (event.type == sf::Event::Closed)
+            window.close();
+        if (event.KeyPressed && event.key.code == sf::Keyboard::Q)
             window.close();
     }
 
