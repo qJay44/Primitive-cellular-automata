@@ -11,12 +11,13 @@
 #include <string>
 
 std::string decimalToBinary(int num) {
-  int n = (int)(log2(num));
+  const int length = 8;
+  const int n = (int)(log2(num));
 
-  std::string binary = std::bitset<8>(num).to_string().substr(8 - n - 1);
+  std::string binary = std::bitset<length>(num).to_string().substr(length - n - 1);
 
-  if (binary.size() < 8)
-    binary.insert(binary.begin(), 8 - binary.size(), '0');
+  if (binary.size() < length)
+    binary.insert(binary.begin(), length - binary.size(), '0');
 
   return binary;
 };
@@ -30,6 +31,7 @@ int main() {
   const int rows = height / squareSize;
   const int columns = width / squareSize;
   const int rule = rand() % 255 + 1;
+  std::cout << "rule: " << rule << "\n";
 
   // create the window
   sf::RenderWindow window(sf::VideoMode(width, height), "Primitive cellular automata");
@@ -59,8 +61,8 @@ int main() {
     cellRules[std::bitset<3>(i).to_string()] = ruleBinary[7 - i];
   }
 
-  for (int i = 0; i < rows - 1; i++) {
-    for (int j = 0; j < columns; j++) {
+  for (size_t i = 0; i < rows - 1; i++) {
+    for (size_t j = 0; j < columns; j++) {
       char mid = grid[i][j];
       char left;
       char right;
@@ -69,7 +71,7 @@ int main() {
         left = grid[i][columns - 1];
         right = grid[i][j + 1];
       }
-      else if (j == columns - 1 && i != rows - 1) {
+      else if (j == columns - 1) {
         left = grid[i][j - 1];
         right = grid[i][0];
       } else {
